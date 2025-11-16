@@ -155,6 +155,7 @@ async def simple_logger_middleware(request: Request, call_next):
         raise
 
 
+
 def import_all_routes(app: FastAPI, package_name: str):
     logger = __import__("logging").getLogger("uvicorn")
 
