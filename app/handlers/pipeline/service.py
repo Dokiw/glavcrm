@@ -12,9 +12,6 @@ class DepartmentService(AsyncDepartmentService):
     def __init__(self, uow: IUnitOfWorkDepart):
         self.uow = uow
 
-
-
-
     @transactional()
     async def create_department(self, depart_data: create_department) -> output_department:
         return await self.uow.depart_repo.create_department(depart_data)
@@ -40,13 +37,13 @@ class PipelineService(AsyncPipelineService):
     async def create_pipeline_stage(self, pipeline_data: create_pipeline_stage, settings: settings_pipeline_stage) -> (
             output_pipeline_stage):
         pipeline_data.meta_data = settings.model_dump(by_alias=True, exclude_none=True)
-        return await self.uow.pipeline_repo.create_pipeline_stage(pipeline_data)
+        return await self.uow.pipeline_repo.create_pipeline_stage(pipeline_data, settings)
 
     @transactional()
     async def update_pipeline_stage(self, pipeline_data: update_pipeline_stage, settings: settings_pipeline_stage) -> (
             Optional[output_pipeline_stage]):
         pipeline_data.meta_data = settings.model_dump(by_alias=True, exclude_none=True)
-        return await self.uow.pipeline_repo.update_pipeline_stage(pipeline_data)
+        return await self.uow.pipeline_repo.update_pipeline_stage(pipeline_data, settings)
 
     @transactional()
     async def get_pipeline_stage_by_id(self, id: int) -> Optional[output_pipeline_stage]:
