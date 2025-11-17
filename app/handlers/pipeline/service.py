@@ -12,6 +12,9 @@ class DepartmentService(AsyncDepartmentService):
     def __init__(self, uow: IUnitOfWorkDepart):
         self.uow = uow
 
+
+
+
     @transactional()
     async def create_department(self, depart_data: create_department) -> output_department:
         return await self.uow.depart_repo.create_department(depart_data)
