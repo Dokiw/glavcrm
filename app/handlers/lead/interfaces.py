@@ -1,53 +1,34 @@
 from typing import Protocol, List, Optional, Dict, Any
-from app.handlers.auth.schemas import (
-    RoleUser,
-    OutUser,
-    UserCreate,
-    LogInUser,
-    AuthResponse, AuthResponseProvide, UserCreateProvide
-)
-from app.handlers.coupon.schemas import CreateCoupon, OutCoupon, CreateCouponService
-from app.handlers.session.schemas import CheckSessionAccessToken
+
+from app.handlers.lead.schemas import SubLeadCreate, SubLeadOut, SubLeadUpdate, MasterLeadOut, MasterLeadUpdate, \
+    MasterLeadCreate
 
 
-class AsyncCouponRepository(Protocol):
+class AsyncSubLeadRepository(Protocol):
 
-    async def create_coupon(self, coupon_data: CreateCoupon) -> Optional[OutCoupon]:
+    async def create_sub_lead(self, data_create: SubLeadCreate) -> SubLeadOut:
         ...
 
-    async def get_by_user_id(self, user_id: int) -> Optional[List[OutCoupon]]:
+    async def update_sub_lead(self, data_update: SubLeadUpdate) -> Optional[SubLeadOut]:
         ...
 
-    async def get_info_by_coupon_id(self, id: int) -> Optional[OutCoupon]:
+    async def get_sub_lead_by_id(self, id: int) -> Optional[SubLeadOut]:
         ...
 
-    async def get_by_token_hash(self, token: str) -> Optional[OutCoupon]:
-        ...
-
-    async def used_coupon(self, user_id: int, token: str) -> Optional[OutCoupon]:
+    async def delete_sub_lead(self, id: int) -> Optional[SubLeadOut]:
         ...
 
 
-class AsyncCouponService(Protocol):
-    """Сервис для купонов"""
+class AsyncMasterLeadRepository(Protocol):
 
-    async def create_coupon(self, coupon_data: CreateCouponService, check_data: CheckSessionAccessToken) -> Optional[OutCoupon]:
+    async def create_master_lead(self, data_create: MasterLeadCreate) -> MasterLeadOut:
         ...
 
-    async def used_coupon(self, token: str, check_data: CheckSessionAccessToken) -> Optional[OutCoupon]:
+    async def update_master_lead(self, data_update: MasterLeadUpdate) -> Optional[MasterLeadOut]:
         ...
 
-    async def used_any_coupon(self, user_id: int, token: str, check_data: CheckSessionAccessToken) -> Optional[OutCoupon]:
+    async def get_master_lead_by_id(self, id: int) -> Optional[MasterLeadOut]:
         ...
 
-    async def get_by_user_id(self, check_data: CheckSessionAccessToken) -> Optional[List[OutCoupon]]:
-        ...
-
-    async def get_info_by_coupon_id(self, id: int, check_data: CheckSessionAccessToken) -> Optional[OutCoupon]:
-        ...
-
-    async def get_by_token_hash(self, token: str, check_data: CheckSessionAccessToken) -> Optional[OutCoupon]:
-        ...
-
-    async def get_by_any_user_id(self,id_user:int, check_data: CheckSessionAccessToken) -> Optional[List[OutCoupon]]:
+    async def delete_master_lead(self, id: int) -> Optional[MasterLeadOut]:
         ...
