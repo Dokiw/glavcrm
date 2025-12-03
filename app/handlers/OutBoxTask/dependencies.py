@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.abs.unit_of_work import IUnitOfWork
 from app.db.session import get_db
-from app.handlers.task.UOW import SqlAlchemyUnitOfWorkOutBox
-from app.handlers.task.interfaces import AsyncOutBoxRepository, AsyncOutBoxService
-from app.handlers.task.service import OutBoxService
+from app.handlers.OutBoxTask.UOW import SqlAlchemyUnitOfWorkOutBox
+from app.handlers.OutBoxTask.interfaces import AsyncOutBoxRepository, AsyncOutBoxService
+from app.handlers.OutBoxTask.service import OutBoxService
 
 
 # фабрика UnitOfWork
