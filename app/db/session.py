@@ -12,7 +12,7 @@ DATABASE_URL = (
 )
 
 # создаём асинхронный движок
-engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+engine = create_async_engine(DATABASE_URL, echo=True, future=True, max_overflow=15, pool_size=10)
 
 # фабрика асинхронных сессий
 AsyncSessionLocal = async_sessionmaker(

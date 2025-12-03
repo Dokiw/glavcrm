@@ -1,7 +1,9 @@
 import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 import datetime as dt
+
+from enum import Enum
 
 
 # ---------------settings ----------------
@@ -24,9 +26,28 @@ class create_task_pipeline(BaseModel):
         from_attributes = True
 
 
+class ParamType(str, Enum):
+    always = "always"
+    optional = "optional"
+
+
+class Any_parameters(BaseModel):
+    type: ParamType
+    name: str = Field(..., min_length=1)
+    type_value: Optional[str] = None
+    description: str = Field(..., min_length=1)
+
+    @model_validator(mode="after")
+    def check_type_value(self):
+        if self.type == ParamType.always and not self.type_value:
+            raise ValueError("type_value is required when type='always'")
+        return self
+
+
 class settings_pipeline_stage(BaseModel):
     transfer: transfer_lead_pipeline_stage
     create_task: create_task_pipeline
+    attribute: Optional[List[Any_parameters]] = None
 
     class Config:
         validate_by_name = True

@@ -1,33 +1,20 @@
 # app/core/abs/unit_of_work.py
 from abc import ABC, abstractmethod
 from contextlib import AbstractAsyncContextManager
+from typing import TypeVar, Generic
 
+from app.handlers.lead.interfaces import AsyncMasterLeadRepository, AsyncSubLeadRepository
 from app.handlers.pipeline.interfaces import AsyncDepartmentRepository, AsyncPipelineRepository
 
-
-class IUnitOfWorkDepart(AbstractAsyncContextManager, ABC):
-    depart_repo: AsyncDepartmentRepository
-
-    @property
-    @abstractmethod
-    def depart_repo(self) -> "AsyncDepartmentRepository":
-        pass
-
-    @abstractmethod
-    async def commit(self):
-        pass
-
-    @abstractmethod
-    async def rollback(self):
-        pass
+TRepo = TypeVar("TRepo")
 
 
-class IUnitOfWorkPipelineStage(AbstractAsyncContextManager, ABC):
-    pipeline_repo: AsyncPipelineRepository
+class IUnitOfWork(AbstractAsyncContextManager, Generic[TRepo], ABC):
+    repo: TRepo
 
     @property
     @abstractmethod
-    def pipeline_repo(self) -> "AsyncPipelineRepository":
+    def repo(self) -> TRepo:
         pass
 
     @abstractmethod

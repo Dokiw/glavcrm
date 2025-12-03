@@ -3,30 +3,48 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.abs.unit_of_work import IUnitOfWork
 from app.db.session import get_db
-from app.handlers.auth.dependencies import RoleServiceDep
 
-from app.handlers.session.dependencies import SessionServiceDep
-
-from app.handlers.coupon.UOW import SqlAlchemyUnitOfWork, IUnitOfWorkCoupon
-from app.handlers.coupon.interfaces import AsyncCouponService
-from app.handlers.coupon.service import SqlAlchemyCoupon
+from app.handlers.lead.UOW import SqlAlchemyUnitOfWorkMasterLead, SqlAlchemyUnitOfWorkSubLead
+from app.handlers.lead.interfaces import AsyncMasterLeadService, AsyncSubLeadService, AsyncMasterLeadRepository, \
+    AsyncSubLeadRepository
+from app.handlers.lead.service import MasterLeadService, SubLeadService
+from app.handlers.pipeline.dependencies import PipelineServiceDep
+from app.handlers.task.dependencies import OutBoxDep
 
 
 # фабрика UnitOfWork
-async def get_uow(db: AsyncSession = Depends(get_db)) -> IUnitOfWorkCoupon:
-    async with SqlAlchemyUnitOfWork(lambda: db) as uow:
+async def get_uow(db: AsyncSession = Depends(get_db)) -> IUnitOfWork[AsyncMasterLeadRepository]:
+    async with SqlAlchemyUnitOfWorkMasterLead(lambda: db) as uow:
         yield uow
 
 
 # фабрика сервиса сессий
 def get_session_service(
-        session_service: SessionServiceDep,
-        role_service: RoleServiceDep,
-        uow: IUnitOfWorkCoupon = Depends(get_uow)
-) -> AsyncCouponService:
-    return SqlAlchemyCoupon(session_service=session_service, uow=uow, role_service=role_service)
+        event_outbox: OutBoxDep,
+        uow: IUnitOfWork[AsyncMasterLeadRepository] = Depends(get_uow)
+) -> AsyncMasterLeadService:
+    return MasterLeadService(uow=uow, event_outbox=event_outbox)
 
 
 # alias для роутов
-couponServiceDep = Annotated[SqlAlchemyCoupon, Depends(get_session_service)]
+MasterLeadServiceDep = Annotated[MasterLeadService, Depends(get_session_service)]
+
+
+async def get_uow_s(db: AsyncSession = Depends(get_db)) -> IUnitOfWork[AsyncSubLeadRepository]:
+    async with SqlAlchemyUnitOfWorkSubLead(lambda: db) as uow:
+        yield uow
+
+
+# фабрика сервиса сессий
+def get_session_service_s(
+        pipeline_service: PipelineServiceDep,
+        event_outbox: OutBoxDep,
+        uow: IUnitOfWork[AsyncSubLeadRepository] = Depends(get_uow_s)
+) -> AsyncSubLeadService:
+    return SubLeadService(uow=uow,pipeline_service=pipeline_service,event_outbox=event_outbox)
+
+
+# alias для роутов
+SubLeadServiceDep = Annotated[SubLeadService, Depends(get_session_service_s)]

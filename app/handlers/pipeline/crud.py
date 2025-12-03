@@ -101,7 +101,7 @@ class PipelineRepository(AsyncPipelineService):
         return await self._to_dto(m) if m else None
 
     async def update_pipeline_stage(self, pipeline_data: update_pipeline_stage, settings: settings_pipeline_stage) -> \
-    Optional[output_pipeline_stage]:
+            Optional[output_pipeline_stage]:
         stmt = (
             update(PipelineStage)
             .where(PipelineStage.id == pipeline_data.id)
@@ -128,3 +128,45 @@ class PipelineRepository(AsyncPipelineService):
         await self.db.delete(obj)
         await self.db.flush()
         return await self._to_dto(obj) if obj else None
+
+    async def next_pipeline_stage_by_current_id(self, id: int) -> Optional[output_pipeline_stage]:
+        current_pipeline_stage = await self.db.get(PipelineStage, id)
+
+        if current_pipeline_stage is None:
+            return None
+
+        stmt = (
+            select(PipelineStage)
+            .where(
+                PipelineStage.pipeline_id == current_pipeline_stage.pipeline_id,
+                PipelineStage.position > current_pipeline_stage.position
+            )
+            .order_by(PipelineStage.position.asc())
+            .limit(1)
+        )
+
+        result = await self.db.execute(stmt)
+        next_stage = result.scalar_one_or_none()
+
+        return await self._to_dto(next_stage) if next_stage else None
+
+    async def prev_pipeline_stage_by_current_id(self, id: int) -> Optional[output_pipeline_stage]:
+        current_pipeline_stage = await self.db.get(PipelineStage, id)
+
+        if current_pipeline_stage is None:
+            return None
+
+        stmt = (
+            select(PipelineStage)
+            .where(
+                PipelineStage.pipeline_id == current_pipeline_stage.pipeline_id,
+                PipelineStage.position < current_pipeline_stage.position
+            )
+            .order_by(PipelineStage.position.asc())
+            .limit(1)
+        )
+
+        result = await self.db.execute(stmt)
+        next_stage = result.scalar_one_or_none()
+
+        return await self._to_dto(next_stage) if next_stage else None

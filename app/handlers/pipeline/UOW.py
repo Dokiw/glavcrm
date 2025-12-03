@@ -3,12 +3,12 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.abs.unit_of_work import IUnitOfWorkPipelineStage, IUnitOfWorkDepart
+from app.core.abs.unit_of_work import IUnitOfWork
 from app.handlers.pipeline.crud import PipelineRepository, DepartmentRepository
 from app.handlers.pipeline.interfaces import AsyncPipelineRepository, AsyncDepartmentRepository
 
 
-class SqlAlchemyUnitOfWorkPipeline(IUnitOfWorkPipelineStage):
+class SqlAlchemyUnitOfWorkPipeline(IUnitOfWork[AsyncPipelineRepository]):
     def __init__(self, session_factory):
         self.session_factory = session_factory
         self._session: Optional[AsyncSession] = None
@@ -28,7 +28,7 @@ class SqlAlchemyUnitOfWorkPipeline(IUnitOfWorkPipelineStage):
         await self._session.close()
 
     @property
-    def pipeline_repo(self) -> AsyncPipelineRepository:
+    def repo(self) -> AsyncPipelineRepository:
         return self.pipeline
 
     async def commit(self):
@@ -38,7 +38,7 @@ class SqlAlchemyUnitOfWorkPipeline(IUnitOfWorkPipelineStage):
         await self._session.rollback()
 
 
-class SqlAlchemyUnitOfWorkDepart(IUnitOfWorkDepart):
+class SqlAlchemyUnitOfWorkDepart(IUnitOfWork[AsyncDepartmentRepository]):
     def __init__(self, session_factory):
         self.session_factory = session_factory
         self._session: Optional[AsyncSession] = None
@@ -58,7 +58,7 @@ class SqlAlchemyUnitOfWorkDepart(IUnitOfWorkDepart):
         await self._session.close()
 
     @property
-    def depart_repo(self) -> AsyncDepartmentRepository:
+    def repo(self) -> AsyncDepartmentRepository:
         return self.depart
 
     async def commit(self):

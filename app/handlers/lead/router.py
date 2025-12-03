@@ -1,176 +1,113 @@
-import datetime
-from typing import Optional, List
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header, Request, Body, Form
+from fastapi import APIRouter, HTTPException
 
-from app.handlers.coupon.dependencies import couponServiceDep
-from app.handlers.coupon.schemas import OutCoupon, CreateCouponService
-from app.handlers.session.schemas import CheckSessionAccessToken
-from app.method.get_token import get_token
+from app.handlers.lead.dependencies import MasterLeadServiceDep, SubLeadServiceDep
+from app.handlers.lead.schemas import MasterLeadOut, MasterLeadCreate, MasterLeadUpdate, SubLeadOut, SubLeadUpdate, \
+    SubLeadCreate, ListSubLeadOut
 
-router = APIRouter(prefix="/coupon", tags=["coupon"])
+router_master_lead = APIRouter(prefix="/MasterLead", tags=["MasterLead"])
 
 
-@router.get("/")
+@router_master_lead.get("/")
 async def hub():
     return HTTPException(200, 'Status - True')
 
 
-@router.post("/create_coupon", response_model=Optional[OutCoupon] | datetime.datetime)
-async def create_coupon(
-        name: str,
-        user_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
+@router_master_lead.get("/{master_lead_id}", response_model=Optional[MasterLeadOut])
+async def get_master_lead_by_id(
+        service_master_lead: MasterLeadServiceDep,
+        master_lead_id: int
+) -> Optional[MasterLeadOut]:
+    return await service_master_lead.get_master_lead_by_id(master_lead_id)
+
+
+@router_master_lead.post("/create", response_model=Optional[MasterLeadOut])
+async def create_master_lead(
+        service_master_lead: MasterLeadServiceDep,
+        data_create: MasterLeadCreate
+) -> MasterLeadOut:
+    return await service_master_lead.create_master_lead(data_create)
+
+
+@router_master_lead.post("/update", response_model=Optional[MasterLeadOut])
+async def update_master_lead(
+        service_master_lead: MasterLeadServiceDep,
+        data_update: MasterLeadUpdate) -> Optional[MasterLeadOut]:
+    return await service_master_lead.update_master_lead(data_update)
+
+
+@router_master_lead.delete("/delete/{master_lead_id}", response_model=Optional[MasterLeadOut])
+async def delete_master_lead(
+        service_master_lead: MasterLeadServiceDep,
+        master_lead_id: int
+) -> Optional[MasterLeadOut]:
+    return await service_master_lead.delete_master_lead(master_lead_id)
+
+
+router_sub_lead = APIRouter(prefix="/SubLead", tags=["SubLead"])
+
+
+@router_sub_lead.post("/{sub_lead_id}/next", response_model=Optional[SubLeadOut])
+async def next_sub_lead_stage(
+        sub_lead_service: SubLeadServiceDep,
+        sub_lead_id: int
 ):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
-
-    csat = CheckSessionAccessToken(
-        user_id=user_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
-
-    ccs = CreateCouponService(
-        user_id=user_id,
-        description=None,
-        name=name,
-        status=None
-    )
-
-    return await coupon_service.create_coupon(coupon_data=ccs, check_data=csat)
+    return await sub_lead_service.next_sub_lead_stage(sub_lead_id)
 
 
-@router.post("/used_coupon", response_model=Optional[OutCoupon])
-async def used_coupon(
-        token: str,
-        user_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
+@router_sub_lead.post("/{sub_lead_id}/move", response_model=Optional[SubLeadOut])
+async def move_sub_lead_stage(
+        sub_lead_service: SubLeadServiceDep,
+        sub_lead_id: int,
+        to_stage_id: int,
 ):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
+    return await sub_lead_service.move_sub_lead_stage(sub_lead_id, to_stage_id)
 
-    csat = CheckSessionAccessToken(
-        user_id=user_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
 
-    return await coupon_service.used_coupon(token=token, check_data=csat)
-
-@router.post("/used_any_coupon", response_model=Optional[OutCoupon])
-async def used_any_coupon(
-        token: str,
-        user_id: int,
-        user_admin_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
+@router_sub_lead.post("/{sub_lead_id}/prev", response_model=Optional[SubLeadOut])
+async def prev_sub_lead_stage(
+        sub_lead_service: SubLeadServiceDep,
+        sub_lead_id: int
 ):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
+    return await sub_lead_service.prev_sub_lead_stage(sub_lead_id)
 
-    csat = CheckSessionAccessToken(
-        user_id=user_admin_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
-
-    return await coupon_service.used_any_coupon(user_id=user_id, token=token, check_data=csat)
-
-
-@router.post("/get_by_user_id", response_model=Optional[List[OutCoupon]])
-async def get_by_user_id(
-        user_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
+@router_sub_lead.post("", response_model=Optional[ListSubLeadOut])
+async def list_sub_lead_stage(
+        sub_lead_service: SubLeadServiceDep,
+        offset: int,
+        limit: int
 ):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
-
-    csat = CheckSessionAccessToken(
-        user_id=user_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
-
-    return await coupon_service.get_by_user_id(check_data=csat)
+    return await sub_lead_service.list_sub_lead(offset,limit)
 
 
-@router.post("/get_by_any_user_id", response_model=Optional[List[OutCoupon]])
-async def get_by_any_user_id(
-        user_id: int,
-        admin_user_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
-):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
-
-    csat = CheckSessionAccessToken(
-        user_id=admin_user_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
-
-    return await coupon_service.get_by_any_user_id(id_user=user_id, check_data=csat)
+@router_sub_lead.post("/create", response_model=SubLeadOut)
+async def create_sub_lead(
+        sub_lead_service: SubLeadServiceDep,
+        data_create: SubLeadCreate
+) -> SubLeadOut:
+    return await sub_lead_service.create_sub_lead(data_create)
 
 
-@router.post("/get_info_by_coupon_id", response_model=Optional[OutCoupon])
-async def get_info_by_coupon_id(
-        id: int,
-        user_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
-):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
-
-    csat = CheckSessionAccessToken(
-        user_id=user_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
-
-    return await coupon_service.get_info_by_coupon_id(id=id, check_data=csat)
+@router_sub_lead.post("/update", response_model=Optional[SubLeadOut])
+async def update_sub_lead(
+        sub_lead_service: SubLeadServiceDep,
+        data_update: SubLeadUpdate
+) -> Optional[SubLeadOut]:
+    return await sub_lead_service.update_sub_lead(data_update)
 
 
-@router.post("/get_by_token_hash", response_model=Optional[OutCoupon])
-async def get_by_token_hash(
-        token: str,
-        user_id: int,
-        request: Request,
-        coupon_service: couponServiceDep,
-        access_token: str = Depends(get_token)
-):
-    # Получаем IP и User-Agent из запроса
-    ip = request.client.host
-    user_agent = request.headers.get("user-agent", "")
+@router_sub_lead.get("/{sub_lead_id}", response_model=Optional[SubLeadOut])
+async def get_sub_lead_by_id(
+        sub_lead_service: SubLeadServiceDep,
+        sub_lead_id: int
+) -> Optional[SubLeadOut]:
+    return await sub_lead_service.get_sub_lead_by_id(sub_lead_id)
 
-    csat = CheckSessionAccessToken(
-        user_id=user_id,
-        ip_address=ip,
-        user_agent=user_agent,
-        access_token=access_token
-    )
 
-    return await coupon_service.get_by_token_hash(token=token, check_data=csat)
+@router_sub_lead.delete("/delete/{sub_lead_id}", response_model=Optional[SubLeadOut])
+async def delete_sub_lead(
+        sub_lead_service: SubLeadServiceDep,
+        sub_lead_id: int
+) -> Optional[SubLeadOut]:
+    return await sub_lead_service.delete_sub_lead(sub_lead_id)

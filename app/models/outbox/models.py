@@ -31,3 +31,9 @@ class Outbox(Base):
     processed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default="pending"  # pending | processing | done | failed
+    )
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

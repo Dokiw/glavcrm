@@ -52,6 +52,13 @@ class SubLeadOut(BaseModel):
         from_attributes = True
 
 
+class ListSubLeadOut(BaseModel):
+    data_sub_lead: List[SubLeadOut] = Field(...)
+    total: int = Field(...)
+    offset: int = Field(...)
+    limit: int = Field(...)
+
+
 class MasterLeadCreate(BaseModel):
     title: Optional[str] = Field(None, alias="title")
     payload: Optional[Dict[str, Any]] = Field(None, alias="payload")
@@ -59,8 +66,6 @@ class MasterLeadCreate(BaseModel):
     completion_rule: Optional[str] = Field(None, alias="completionRule")
     created_by: Optional[uuid.UUID] = Field(None, alias="createdBy")
     contact_id: Optional[int] = Field(None, alias="contactId")
-    # allow creating sub-leads together with master
-    sub_leads: Optional[List[SubLeadCreate]] = Field(None, alias="subLeads")
 
     class Config:
         validate_by_name = True
@@ -77,7 +82,6 @@ class MasterLeadUpdate(BaseModel):
     result: Optional[Dict[str, Any]] = Field(None, alias="result")
     version: Optional[int] = Field(None, alias="version")
     contact_id: Optional[int] = Field(None, alias="contactId")
-    sub_leads: Optional[List[SubLeadUpdate]] = Field(None, alias="subLeads")
 
     class Config:
         validate_by_name = True
@@ -96,7 +100,6 @@ class MasterLeadOut(BaseModel):
     result: Optional[Dict[str, Any]] = Field(None, alias="result")
     version: int = Field(..., alias="version")
     contact_id: Optional[int] = Field(None, alias="contactId")
-    sub_leads: Optional[List[SubLeadOut]] = Field(None, alias="subLeads")
 
     class Config:
         validate_by_name = True

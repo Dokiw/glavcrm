@@ -21,16 +21,24 @@ class AsyncDepartmentRepository(Protocol):
 
 class AsyncPipelineRepository(Protocol):
 
-    async def create_pipeline_stage(self, pipeline_data: create_pipeline_stage, settings: settings_pipeline_stage) -> output_pipeline_stage:
+    async def create_pipeline_stage(self, pipeline_data: create_pipeline_stage,
+                                    settings: settings_pipeline_stage) -> output_pipeline_stage:
         ...
 
-    async def update_pipeline_stage(self, pipeline_data: update_pipeline_stage, settings: settings_pipeline_stage) -> Optional[output_pipeline_stage]:
+    async def update_pipeline_stage(self, pipeline_data: update_pipeline_stage, settings: settings_pipeline_stage) -> \
+            Optional[output_pipeline_stage]:
         ...
 
     async def get_pipeline_stage_by_id(self, id: int) -> Optional[output_pipeline_stage]:
         ...
 
     async def delete_pipeline_stage_by_id(self, id: int) -> Optional[output_pipeline_stage]:
+        ...
+
+    async def next_pipeline_stage_by_current_id(self, id: int) -> Optional[output_pipeline_stage]:
+        ...
+
+    async def prev_pipeline_stage_by_current_id(self, id: int) -> Optional[output_pipeline_stage]:
         ...
 
 
@@ -63,4 +71,10 @@ class AsyncPipelineService(Protocol):
         ...
 
     async def delete_pipeline_stage_by_id(self, id: int) -> Optional[output_pipeline_stage]:
+        ...
+
+    async def next_pipeline_stage_by_current_id(self, id: int) -> Optional[output_pipeline_stage]:
+        ...
+
+    async def prev_pipeline_stage_by_current_id(self, id: int) -> Optional[output_pipeline_stage]:
         ...
