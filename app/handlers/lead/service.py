@@ -5,15 +5,17 @@ from app.handlers.lead.interfaces import AsyncMasterLeadService, AsyncSubLeadSer
     AsyncSubLeadRepository
 from app.handlers.lead.schemas import MasterLeadCreate, MasterLeadOut, MasterLeadUpdate, SubLeadCreate, SubLeadOut, \
     SubLeadUpdate, ListSubLeadOut
+from app.handlers.outbotevent.schemas import CreateOutBox, CreateOutBoxList
 from app.handlers.pipeline.interfaces import AsyncPipelineService
-from app.handlers.task.interfaces import AsyncOutBoxService
+from app.handlers.outbotevent.interfaces import AsyncOutBoxService
+from app.handlers.subleadevent.interfaces import AsyncSubLeadEventService
 from app.method.decorator import transactional
 
 
 class MasterLeadService(AsyncMasterLeadService):
 
     def __init__(self, uow: IUnitOfWork[AsyncMasterLeadRepository], event_outbox: AsyncOutBoxService):
-        self.uow = uow,
+        self.uow = uow
         self.event_outbox = event_outbox
 
     @transactional()
@@ -36,14 +38,38 @@ class MasterLeadService(AsyncMasterLeadService):
 class SubLeadService(AsyncSubLeadService):
 
     def __init__(self, uow: IUnitOfWork[AsyncSubLeadRepository], pipeline_service: AsyncPipelineService,
-                 event_outbox: AsyncOutBoxService):
+                 event_outbox: AsyncOutBoxService, event_sub_lead: AsyncSubLeadEventService):
         self.uow = uow
         self.pipeline_service = pipeline_service
         self.event_outbox = event_outbox
+        self.event_sub_lead = event_sub_lead
+
+    async def _add_oub_box_event(self, sub_lead: int) -> bool:
+        events = await self.event_sub_lead.get_sub_lead_event_by_sub_lead_id(sub_lead)
+
+        if events is None:
+            return False
+
+        outbox_events = []
+        for i in events:
+            outbox_events.append(CreateOutBox(
+                aggregate_type="sub_lead",
+                aggregate_id=i.sub_lead_id,
+                event_type=i.event_type,
+                payload=i.payload,
+                processed=False,
+                status="pending",
+            ))
+        await self.event_outbox.create_out_box_many(CreateOutBoxList(events=outbox_events))
+
+        return True
 
     @transactional()
     async def create_sub_lead(self, data_create: SubLeadCreate) -> SubLeadOut:
-        return await self.uow.repo.create_sub_lead(data_create)
+        res = await self.uow.repo.create_sub_lead(data_create)
+        # добавляем бэкграунд таски
+        await self._add_oub_box_event(res.id)
+        return res
 
     @transactional()
     async def update_sub_lead(self, data_update: SubLeadUpdate) -> Optional[SubLeadOut]:
@@ -88,6 +114,8 @@ class SubLeadService(AsyncSubLeadService):
 
         await self.uow.repo.update_sub_lead(data_update)
 
+        # добавляем бэкграунд таски
+        await self._add_oub_box_event(res.id)
         return res
 
     @transactional()
@@ -115,6 +143,8 @@ class SubLeadService(AsyncSubLeadService):
 
         await self.uow.repo.update_sub_lead(data_update)
 
+        # добавляем бэкграунд таски
+        await self._add_oub_box_event(res.id)
         return res
 
     @transactional()
@@ -141,6 +171,9 @@ class SubLeadService(AsyncSubLeadService):
         )
 
         await self.uow.repo.update_sub_lead(data_update)
+
+        # добавляем бэкграунд таски
+        await self._add_oub_box_event(res.id)
 
         return res
 

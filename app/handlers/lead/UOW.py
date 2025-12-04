@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +20,7 @@ class SqlAlchemyUnitOfWorkMasterLead(IUnitOfWork[AsyncMasterLeadRepository]):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            await self.commit()  # автоматически сохраняем изменения
+            await self.commit()
         else:
             await self.rollback()
         await self._session.close()
