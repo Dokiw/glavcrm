@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from sqlalchemy import insert
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.handlers.OutBoxTask.interfaces import AsyncOutBoxRepository
-from app.handlers.OutBoxTask.schemas import OutBoxOutPut, CreateOutBoxList, CreateOutBox
+from app.handlers.outbotevent.interfaces import AsyncOutBoxRepository
+from app.handlers.outbotevent.schemas import OutBoxOutPut, CreateOutBoxList, CreateOutBox
 from app.models import Outbox
 from datetime import datetime as dt, timezone
 

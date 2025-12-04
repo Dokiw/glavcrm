@@ -2,7 +2,7 @@ from typing import Protocol, Optional, List
 
 from app.handlers.pipeline.schemas import create_department, output_department, update_department, \
     create_pipeline_stage, output_pipeline_stage, update_pipeline_stage, settings_pipeline_stage
-from app.handlers.task.schemas import CreateOutBox, CreateOutBoxList, OutBoxOutPut
+from app.handlers.outbotevent.schemas import CreateOutBox, CreateOutBoxList, OutBoxOutPut
 
 
 class AsyncOutBoxRepository(Protocol):

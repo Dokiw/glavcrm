@@ -1,8 +1,8 @@
 from typing import List, Optional
 
 from app.core.abs.unit_of_work import IUnitOfWork
-from app.handlers.OutBoxTask.interfaces import AsyncOutBoxService, AsyncOutBoxRepository
-from app.handlers.OutBoxTask.schemas import CreateOutBoxList, OutBoxOutPut, CreateOutBox
+from app.handlers.outbotevent.interfaces import AsyncOutBoxService, AsyncOutBoxRepository
+from app.handlers.outbotevent.schemas import CreateOutBoxList, OutBoxOutPut, CreateOutBox
 
 
 class OutBoxService(AsyncOutBoxService):

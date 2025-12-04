@@ -72,13 +72,14 @@ async def prev_sub_lead_stage(
 ):
     return await sub_lead_service.prev_sub_lead_stage(sub_lead_id)
 
+
 @router_sub_lead.post("", response_model=Optional[ListSubLeadOut])
 async def list_sub_lead_stage(
         sub_lead_service: SubLeadServiceDep,
         offset: int,
         limit: int
 ):
-    return await sub_lead_service.list_sub_lead(offset,limit)
+    return await sub_lead_service.list_sub_lead(offset, limit)
 
 
 @router_sub_lead.post("/create", response_model=SubLeadOut)

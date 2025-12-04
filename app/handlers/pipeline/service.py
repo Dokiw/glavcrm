@@ -10,7 +10,7 @@ from app.method.decorator import transactional
 
 class DepartmentService(AsyncDepartmentService):
 
-    def __init__(self, uow: IUnitOfWork[AsyncDepartmentRepository]   ):
+    def __init__(self, uow: IUnitOfWork[AsyncDepartmentRepository]):
         self.uow = uow
 
     @transactional()
