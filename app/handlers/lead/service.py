@@ -1,14 +1,18 @@
 from typing import Optional
 
+from pydantic import ValidationError
+
 from app.core.abs.unit_of_work import IUnitOfWork
 from app.handlers.lead.interfaces import AsyncMasterLeadService, AsyncSubLeadService, AsyncMasterLeadRepository, \
     AsyncSubLeadRepository
 from app.handlers.lead.schemas import MasterLeadCreate, MasterLeadOut, MasterLeadUpdate, SubLeadCreate, SubLeadOut, \
     SubLeadUpdate, ListSubLeadOut
-from app.handlers.outbotevent.schemas import CreateOutBox, CreateOutBoxList
+from app.handlers.outboxevent.schemas import CreateOutBox, CreateOutBoxList
 from app.handlers.pipeline.interfaces import AsyncPipelineService
-from app.handlers.outbotevent.interfaces import AsyncOutBoxService
+from app.handlers.outboxevent.interfaces import AsyncOutBoxService
+from app.handlers.pipeline.schemas import CreateEventPipeline
 from app.handlers.subleadevent.interfaces import AsyncSubLeadEventService
+from app.main import logger
 from app.method.decorator import transactional
 
 
@@ -30,6 +34,7 @@ class MasterLeadService(AsyncMasterLeadService):
     async def get_master_lead_by_id(self, id: int) -> Optional[MasterLeadOut]:
         return await self.uow.repo.get_master_lead_by_id(id)
 
+
     @transactional()
     async def delete_master_lead(self, id: int) -> Optional[MasterLeadOut]:
         return await self.uow.repo.delete_master_lead(id)
@@ -38,37 +43,57 @@ class MasterLeadService(AsyncMasterLeadService):
 class SubLeadService(AsyncSubLeadService):
 
     def __init__(self, uow: IUnitOfWork[AsyncSubLeadRepository], pipeline_service: AsyncPipelineService,
-                 event_outbox: AsyncOutBoxService, event_sub_lead: AsyncSubLeadEventService):
+                 event_outbox: AsyncOutBoxService):
         self.uow = uow
         self.pipeline_service = pipeline_service
         self.event_outbox = event_outbox
-        self.event_sub_lead = event_sub_lead
 
-    async def _add_oub_box_event(self, sub_lead: int) -> bool:
-        events = await self.event_sub_lead.get_sub_lead_event_by_sub_lead_id(sub_lead)
+    @transactional()
+    async def _add_outbox_event(self, sub_lead_id: int) -> bool:
+        sub_lead_info = await self.get_sub_lead_by_id(sub_lead_id)
 
-        if events is None:
+        raw_events = sub_lead_info.meta_data.get("settings").get("events_sub_lead")
+
+        if not raw_events:
+            logger.info("НЕ ПОНЯТНО, ЧТО ЗА ХУЙНЯ" + raw_events)
             return False
 
         outbox_events = []
-        for i in events:
-            outbox_events.append(CreateOutBox(
-                aggregate_type="sub_lead",
-                aggregate_id=i.sub_lead_id,
-                event_type=i.event_type,
-                payload=i.payload,
-                processed=False,
-                status="pending",
-            ))
-        await self.event_outbox.create_out_box_many(CreateOutBoxList(events=outbox_events))
 
+        for raw_event in raw_events:
+            try:
+                
+                event = CreateEventPipeline(**raw_event)
+
+                outbox_events.append(CreateOutBox(
+                    aggregate_type="sub_lead",
+                    aggregate_id=sub_lead_id,
+                    event_type=event.event_type,
+                    payload=event.payload,
+                    processed=False,
+                    status="pending",
+                ))
+            except ValidationError as e:
+                logger.error(msg="ERRORS ON APPEND INTO THE OUTBOX EVENTS")
+                continue
+
+        if not outbox_events:
+            return False
+
+        await self.event_outbox.create_out_box_many(CreateOutBoxList(events=outbox_events))
         return True
 
     @transactional()
     async def create_sub_lead(self, data_create: SubLeadCreate) -> SubLeadOut:
+        pipeline_stage = await self.pipeline_service.get_pipeline_stage_by_id(data_create.stage_id)
+        data_create.meta_data = {
+            "settings": pipeline_stage.meta_data,
+            "main_data": data_create.meta_data
+        }
+
         res = await self.uow.repo.create_sub_lead(data_create)
         # добавляем бэкграунд таски
-        await self._add_oub_box_event(res.id)
+        await self._add_outbox_event(res.id)
         return res
 
     @transactional()
@@ -105,7 +130,7 @@ class SubLeadService(AsyncSubLeadService):
             status="Created",
             meta_data=current_sub_lead.meta_data,
         )
-        res = await self.create_sub_lead(data_create)
+        res = await self.uow.repo.create_sub_lead(data_create)
 
         data_update = SubLeadUpdate(
             id=current_sub_lead.id,
@@ -115,7 +140,7 @@ class SubLeadService(AsyncSubLeadService):
         await self.uow.repo.update_sub_lead(data_update)
 
         # добавляем бэкграунд таски
-        await self._add_oub_box_event(res.id)
+        await self._add_outbox_event(res.id)
         return res
 
     @transactional()
@@ -144,7 +169,7 @@ class SubLeadService(AsyncSubLeadService):
         await self.uow.repo.update_sub_lead(data_update)
 
         # добавляем бэкграунд таски
-        await self._add_oub_box_event(res.id)
+        await self._add_outbox_event(res.id)
         return res
 
     @transactional()
@@ -163,6 +188,7 @@ class SubLeadService(AsyncSubLeadService):
             status="Created",
             meta_data=current_sub_lead.meta_data,
         )
+
         res = await self.create_sub_lead(data_create)
 
         data_update = SubLeadUpdate(
@@ -173,7 +199,7 @@ class SubLeadService(AsyncSubLeadService):
         await self.uow.repo.update_sub_lead(data_update)
 
         # добавляем бэкграунд таски
-        await self._add_oub_box_event(res.id)
+        await self._add_outbox_event(res.id)
 
         return res
 

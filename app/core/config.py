@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     SHOP_ID: str
 
+    BASE_URL: str
+
     class Config:
         env_file = ENV_PATH  # чтобы pydantic тоже читал из .env
 

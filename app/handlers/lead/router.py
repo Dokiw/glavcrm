@@ -30,7 +30,7 @@ async def create_master_lead(
     return await service_master_lead.create_master_lead(data_create)
 
 
-@router_master_lead.post("/update", response_model=Optional[MasterLeadOut])
+@router_master_lead.patch("/update", response_model=Optional[MasterLeadOut])
 async def update_master_lead(
         service_master_lead: MasterLeadServiceDep,
         data_update: MasterLeadUpdate) -> Optional[MasterLeadOut]:
@@ -90,7 +90,7 @@ async def create_sub_lead(
     return await sub_lead_service.create_sub_lead(data_create)
 
 
-@router_sub_lead.post("/update", response_model=Optional[SubLeadOut])
+@router_sub_lead.patch("/update", response_model=Optional[SubLeadOut])
 async def update_sub_lead(
         sub_lead_service: SubLeadServiceDep,
         data_update: SubLeadUpdate

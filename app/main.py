@@ -17,7 +17,6 @@ logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.DEBUG)
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 🚀 выполняется при старте
@@ -155,7 +154,6 @@ async def simple_logger_middleware(request: Request, call_next):
         raise
 
 
-
 def import_all_routes(app: FastAPI, package_name: str):
     logger = __import__("logging").getLogger("uvicorn")
 
@@ -231,5 +229,4 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
 
-
-    uvicorn.run(app, host="127.0.0.1", port=9787, timeout_keep_alive=120)
+    uvicorn.run(app, host="127.0.0.1", port=9797, timeout_keep_alive=120)

@@ -36,3 +36,10 @@ class Task(Base):
 
     # relationship
     sub_lead: Mapped[Optional["SubLead"]] = relationship("SubLead", back_populates="tasks")
+
+    time_tracker: Mapped[Optional["TimeTracker"]] = relationship(
+        "TimeTracker",
+        back_populates="task",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

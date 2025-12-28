@@ -3,8 +3,8 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.abs.unit_of_work import IUnitOfWork
-from app.handlers.outbotevent.crud import OutBoxRepository
-from app.handlers.outbotevent.interfaces import AsyncOutBoxRepository
+from app.handlers.outboxevent.crud import OutBoxRepository
+from app.handlers.outboxevent.interfaces import AsyncOutBoxRepository
 
 
 class SqlAlchemyUnitOfWorkOutBox(IUnitOfWork[AsyncOutBoxRepository]):

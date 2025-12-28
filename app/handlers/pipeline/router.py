@@ -30,7 +30,7 @@ async def create_department(
     return await service_depart.create_department(depart_data)
 
 
-@router_Depart.post("/update", response_model=Optional[output_department])
+@router_Depart.patch("/update", response_model=Optional[output_department])
 async def update_department(
         service_depart: DepartServiceDep,
         depart_data: update_department
@@ -68,7 +68,7 @@ async def create_pipeline_stage(
     return await service_pipeline.create_pipeline_stage(pipeline_data, settings)
 
 
-@router_Pipeline.post("/update", response_model=output_pipeline_stage)
+@router_Pipeline.patch("/update", response_model=output_pipeline_stage)
 async def update_pipeline_stage(
         service_pipeline: PipelineServiceDep,
         pipeline_data: update_pipeline_stage,
@@ -77,9 +77,9 @@ async def update_pipeline_stage(
     return await service_pipeline.update_pipeline_stage(pipeline_data, settings)
 
 
-@router_Pipeline.delete("/delete/{pipeline_id}",response_model=Optional[output_pipeline_stage])
+@router_Pipeline.delete("/delete/{pipeline_id}", response_model=Optional[output_pipeline_stage])
 async def delete_pipeline_stage_by_id(
-    service_pipeline: PipelineServiceDep,
-    pipeline_id: int
+        service_pipeline: PipelineServiceDep,
+        pipeline_id: int
 ):
     return await service_pipeline.delete_pipeline_stage_by_id(pipeline_id)

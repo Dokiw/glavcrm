@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.handlers.subleadevent.dependencies import SubLeadEventServiceDep
 from app.handlers.subleadevent.schemas import OutSubLeadEvent, CreateSubLeadEvent, UpdateSubLeadEvent
@@ -32,7 +32,7 @@ async def create_sub_lead_event(
     return await service_sub_lead_event.create_sub_lead_event(data)
 
 
-@router_sub_lead_event.post("/update", response_model=Optional[OutSubLeadEvent])
+@router_sub_lead_event.patch("/update", response_model=Optional[OutSubLeadEvent])
 async def update_sub_lead_event(
         service_sub_lead_event: SubLeadEventServiceDep,
         data: UpdateSubLeadEvent

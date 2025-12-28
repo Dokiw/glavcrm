@@ -11,7 +11,7 @@ from app.handlers.lead.interfaces import AsyncMasterLeadService, AsyncSubLeadSer
     AsyncSubLeadRepository
 from app.handlers.lead.service import MasterLeadService, SubLeadService
 from app.handlers.pipeline.dependencies import PipelineServiceDep
-from app.handlers.outbotevent.dependencies import OutBoxDep
+from app.handlers.outboxevent.dependencies import OutBoxDep
 
 
 # фабрика UnitOfWork

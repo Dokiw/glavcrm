@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.handlers.outbotevent.interfaces import AsyncOutBoxRepository
-from app.handlers.outbotevent.schemas import OutBoxOutPut, CreateOutBoxList, CreateOutBox
+from app.handlers.outboxevent.interfaces import AsyncOutBoxRepository
+from app.handlers.outboxevent.schemas import OutBoxOutPut, CreateOutBoxList, CreateOutBox
 from app.models import Outbox
 from datetime import datetime as dt, timezone
 

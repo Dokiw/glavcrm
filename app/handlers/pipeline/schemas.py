@@ -17,13 +17,18 @@ class transfer_lead_pipeline_stage(BaseModel):
         from_attributes = True
 
 
-class create_task_pipeline(BaseModel):
-    enable: bool = Field(...)
-    from_whom: str = Field(...)
+class enumerate_event_type(str, Enum):
+    create_task = "task_sub_lead"
 
-    class Config:
-        validate_by_name = True
-        from_attributes = True
+
+class CreateEventPipeline(BaseModel):
+    event_type: enumerate_event_type
+    payload: Dict[str, Any]
+
+    model_config = {
+        "validate_by_name": True,
+        "from_attributes": True
+    }
 
 
 class ParamType(str, Enum):
@@ -46,12 +51,13 @@ class Any_parameters(BaseModel):
 
 class settings_pipeline_stage(BaseModel):
     transfer: transfer_lead_pipeline_stage
-    create_task: create_task_pipeline
+    events_sub_lead: Optional[List[CreateEventPipeline]] = None
     attribute: Optional[List[Any_parameters]] = None
 
-    class Config:
-        validate_by_name = True
-        from_attributes = True
+    model_config = {
+        "validate_by_name": True,
+        "from_attributes": True
+    }
 
 
 # -------------------input------------------
